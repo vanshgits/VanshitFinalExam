@@ -1,0 +1,148 @@
+openapi: 3.0.3
+info:
+  title: Restaurant Directory API
+  version: 1.0.0
+  description: A simple REST API to manage restaurant listings with CRUD operations and pagination.
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+
+paths:
+  /restaurants:
+    get:
+      summary: Get paginated list of restaurants
+      description: Returns a list of restaurants, 10 per page. Use ?page= to navigate.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number (defaults to 1)
+      responses:
+        '200':
+          description: Success – returns paginated restaurant data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+
+    post:
+      summary: Add a new restaurant
+      description: Creates a new restaurant entry in the database.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRestaurant'
+      responses:
+        '201':
+          description: Restaurant created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Restaurant'
+        '400':
+          description: Invalid input
+
+  /restaurants/{id}:
+    delete:
+      summary: Delete a restaurant
+      description: Removes a restaurant by its MongoDB _id.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The MongoDB ObjectId of the restaurant
+      responses:
+        '200':
+          description: Restaurant deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Deleted"
+        '404':
+          description: Restaurant not found
+
+components:
+  schemas:
+    Restaurant:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Auto-generated MongoDB ID
+        name:
+          type: string
+          example: "Pizza Palace"
+        address:
+          type: string
+          example: "123 Main St, Downtown"
+        phoneNumber:
+          type: string
+          example: "+1-555-0199"
+        emailAddress:
+          type: string
+          format: email
+          example: "contact@pizzapalace.com"
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 10
+          example: 8
+      required:
+        - name
+        - address
+        - phoneNumber
+        - emailAddress
+        - rating
+
+    NewRestaurant:
+      type: object
+      description: Data required to create a new restaurant
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        phoneNumber:
+          type: string
+        emailAddress:
+          type: string
+          format: email
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 10
+      required:
+        - name
+        - address
+        - phoneNumber
+        - emailAddress
+        - rating
+
+    PaginatedResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 3
+        total:
+          type: integer
+          example: 25
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Restaurant'
