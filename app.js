@@ -26,18 +26,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/api/restaurants', restaurantsRouter);
 
-// 404
-app.use(function(req, res, next) {
-  next(require('http-errors')(404));
-});
 
-// Error handler
-app.use(function(err, req, res, next) {
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-  res.status(err.status || 500);
-  res.render('error');
-});
 
 module.exports = app;
 
@@ -51,7 +40,6 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerJSDoc = require('swagger-jsdoc');
 const yaml = require('js-yaml');
 const fs = require('fs');
-const path = require('path');
 
 try {
   const spec = yaml.load(fs.readFileSync(path.join(__dirname, 'openapi.yaml'), 'utf8'));
@@ -64,3 +52,36 @@ try {
 } catch (err) {
   console.warn('Swagger UI failed to load:', err.message);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 404 Handler (JSON)
+app.use((req, res, next) => {
+  res.status(404).json({
+    error: 'Not Found',
+    message: `Cannot ${req.method} ${req.originalUrl}`,
+    path: req.originalUrl
+  });
+});
+
+// Error Handler (JSON)
+app.use((err, req, res, next) => {
+  const status = err.status || 500;
+  res.status(status).json({
+    error: err.name || 'Internal Server Error',
+    message: err.message,
+    // Only show stack in development
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
